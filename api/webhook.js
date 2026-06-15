@@ -65,7 +65,11 @@ export default async function handler(req, res) {
 
   let event;
   try {
-    event = req.body;
+    if (typeof req.body === "string") {
+      event = JSON.parse(req.body);
+    } else {
+      event = req.body;
+    }
     console.log("Event received:", event?.type);
   } catch (err) {
     console.error("Body parse error:", err.message);
