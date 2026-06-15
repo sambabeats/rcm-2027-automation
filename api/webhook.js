@@ -42,7 +42,7 @@ Gabriel Lopes`;
     body: JSON.stringify({
       sender: {
         name: "Gabriel Lopes | Samba Beats",
-        email: "mai@sambabeats.com.br",
+        email: "mail@sambabeats.com.br",
       },
       to: [{ email: customerEmail, name: customerName || customerEmail }],
       subject: "Samba Beats - Welcome to the Rio Carnival Masterclass 2027",
