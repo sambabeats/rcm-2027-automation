@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
   let event;
   try {
-    event = await req.json();
+    event = req.body;
   } catch (err) {
     return res.status(400).json({ error: "Invalid JSON" });
   }
