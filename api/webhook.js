@@ -11,7 +11,9 @@ async function getLineItems(sessionId) {
       },
     }
   );
-  return response.json();
+  const data = await response.json();
+  console.log("Line items response:", JSON.stringify(data));
+  return data;
 }
 
 async function sendWelcomeEmail(customerEmail, customerName) {
@@ -62,23 +64,34 @@ export default async function handler(req, res) {
   }
 
   let event;
-try {
-  event = req.body;
-} catch (err) {
-  return res.status(400).json({ error: "Invalid JSON" });
-}
+  try {
+    event = req.body;
+    console.log("Event received:", event?.type);
+  } catch (err) {
+    console.error("Body parse error:", err.message);
+    return res.status(400).json({ error: "Invalid JSON" });
+  }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+    console.log("Session payment_status:", session.payment_status);
 
     if (session.payment_status !== "paid") {
       return res.status(200).json({ received: true, skipped: "not paid" });
     }
 
-    const lineItemsData = await getLineItems(session.id);
+    let lineItemsData;
+    try {
+      lineItemsData = await getLineItems(session.id);
+    } catch (err) {
+      console.error("Error fetching line items:", err.message);
+      return res.status(500).json({ error: "Failed to fetch line items" });
+    }
+
     const hasProduct = lineItemsData.data?.some(
       (item) => item.price?.product?.id === PRODUCT_ID
     );
+    console.log("Has product:", hasProduct);
 
     if (!hasProduct) {
       return res.status(200).json({ received: true, skipped: "wrong product" });
@@ -86,6 +99,7 @@ try {
 
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
+    console.log("Customer email:", customerEmail);
 
     if (!customerEmail) {
       return res.status(200).json({ received: true, skipped: "no email" });
@@ -93,7 +107,7 @@ try {
 
     try {
       await sendWelcomeEmail(customerEmail, customerName);
-      console.log(`Welcome email sent to ${customerEmail}`);
+      console.log("Welcome email sent to", customerEmail);
     } catch (err) {
       console.error("Failed to send email:", err.message);
       return res.status(500).json({ error: "Failed to send email" });
